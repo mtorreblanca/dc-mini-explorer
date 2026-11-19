@@ -1,0 +1,4 @@
+body { font-family: system-ui, sans-serif; margin: 0; padding: 24px; color: #1f2937; background: #fafafa; }
+h1 { font-size: 20px; margin: 0 0 4px; }
+.subtitle { color: #6b7280; margin: 0 0 24px; font-size: 14px; }
+.card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; max-width: 760px; }

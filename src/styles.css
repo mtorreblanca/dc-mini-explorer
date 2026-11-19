@@ -10,3 +10,6 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .tooltip { pointer-events: none; }
 .tooltip rect { fill: #1f2937; rx: 4; }
 .tooltip text { fill: white; font-size: 12px; }
+.chart svg:focus { outline: none; }
+.chart svg:focus-visible { outline: 2px solid #2563eb; outline-offset: 4px; border-radius: 4px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

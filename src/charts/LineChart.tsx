@@ -81,6 +81,18 @@ export function LineChart({ data, width = 700, height = 320, title }: LineChartP
 
   const clearHover = () => setHoveredPoint(undefined);
 
+  // ←/→ move between points so keyboard users can explore the chart too.
+  const handleKeyDown = (event: React.KeyboardEvent<SVGSVGElement>) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    if (data.length === 0) return;
+    event.preventDefault();
+
+    const current = hoveredPoint ? data.indexOf(hoveredPoint) : -1;
+    const step = event.key === 'ArrowRight' ? 1 : -1;
+    const next = Math.max(0, Math.min(data.length - 1, current + step));
+    setHoveredPoint(data[next]);
+  };
+
   // Places the tooltip right of the dot, or left of it when it would overflow.
   const tooltipX = (pointX: number) => {
     const rightEdge = pointX + TOOLTIP.offset + TOOLTIP.width;
@@ -89,52 +101,72 @@ export function LineChart({ data, width = 700, height = 320, title }: LineChartP
       : pointX + TOOLTIP.offset;
   };
 
+  const announcement = hoveredPoint
+    ? `${formatYear(hoveredPoint.date)}: ${formatValue(hoveredPoint.value)}`
+    : '';
+
   return (
-    <svg width={width} height={height} role="img" aria-label={title}>
-      <title>{title}</title>
-      <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-        <g ref={yAxisRef} className="axis" />
-        <g ref={xAxisRef} className="axis" transform={`translate(0,${innerHeight})`} />
-        <path className="line" d={linePath} />
+    <div className="chart">
+      <svg
+        width={width}
+        height={height}
+        role="img"
+        aria-label={`${title}. Use the left and right arrow keys to read values.`}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        onBlur={clearHover}
+      >
+        <title>{title}</title>
+        <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
+          <g ref={yAxisRef} className="axis" />
+          <g ref={xAxisRef} className="axis" transform={`translate(0,${innerHeight})`} />
+          <path className="line" d={linePath} />
 
-        {hoveredPoint && (
-          <>
-            <line
-              className="focus-line"
-              x1={xScale(hoveredPoint.date)}
-              x2={xScale(hoveredPoint.date)}
-              y1={innerHeight}
-              y2={yScale(hoveredPoint.value)}
-            />
-            <circle
-              className="focus-dot"
-              cx={xScale(hoveredPoint.date)}
-              cy={yScale(hoveredPoint.value)}
-              r={4}
-            />
-            <g
-              className="tooltip"
-              transform={`translate(${tooltipX(xScale(hoveredPoint.date))},${
-                yScale(hoveredPoint.value) - TOOLTIP.height / 2
-              })`}
-            >
-              <rect width={TOOLTIP.width} height={TOOLTIP.height} />
-              <text x={8} y={TOOLTIP.height / 2} dominantBaseline="middle">
-                {formatYear(hoveredPoint.date)} · {formatValue(hoveredPoint.value)}
-              </text>
-            </g>
-          </>
-        )}
+          {hoveredPoint && (
+            <>
+              <line
+                className="focus-line"
+                x1={xScale(hoveredPoint.date)}
+                x2={xScale(hoveredPoint.date)}
+                y1={innerHeight}
+                y2={yScale(hoveredPoint.value)}
+              />
+              <circle
+                className="focus-dot"
+                cx={xScale(hoveredPoint.date)}
+                cy={yScale(hoveredPoint.value)}
+                r={4}
+              />
+              <g
+                className="tooltip"
+                transform={`translate(${tooltipX(xScale(hoveredPoint.date))},${
+                  yScale(hoveredPoint.value) - TOOLTIP.height / 2
+                })`}
+              >
+                <rect width={TOOLTIP.width} height={TOOLTIP.height} />
+                <text x={8} y={TOOLTIP.height / 2} dominantBaseline="middle">
+                  {formatYear(hoveredPoint.date)} · {formatValue(hoveredPoint.value)}
+                </text>
+              </g>
+            </>
+          )}
 
-        {/* Invisible hit area over the plot. Drawn last so it sits on top. */}
-        <rect
-          className="overlay"
-          width={innerWidth}
-          height={innerHeight}
-          onPointerMove={handlePointerMove}
-          onPointerLeave={clearHover}
-        />
-      </g>
-    </svg>
+          {/* Invisible hit area over the plot. Drawn last so it sits on top. */}
+          <rect
+            className="overlay"
+            width={innerWidth}
+            height={innerHeight}
+            onPointerMove={handlePointerMove}
+            onPointerLeave={clearHover}
+          />
+        </g>
+      </svg>
+
+      {/* Live region: screen readers announce the hovered point.
+          Outside the <svg> because children of role="img" are hidden. */}
+      <p className="sr-only" aria-live="polite">
+        {announcement}
+      </p>
+    </div>
   );
 }

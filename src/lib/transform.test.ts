@@ -1,4 +1,4 @@
-import { toPoints } from "./transform";
+import { nearestPoint, toPoints } from "./transform";
 
 describe("toPoints", () => {
   it("parses year strings into Dates and keeps values", () => {
@@ -23,5 +23,32 @@ describe("toPoints", () => {
       { date: "2021", value: 2 },
     ]);
     expect(points).toHaveLength(1);
+  });
+});
+
+describe("nearestPoint", () => {
+  const year = (y: number) => new Date(y, 0, 1);
+  const points = [
+    { date: year(2018), value: 1 },
+    { date: year(2019), value: 2 },
+    { date: year(2020), value: 3 },
+  ];
+
+  it("returns undefined for an empty array", () => {
+    expect(nearestPoint([], year(2019))).toBeUndefined();
+  });
+
+  it("returns the exact match when the date is in the data", () => {
+    expect(nearestPoint(points, year(2019))?.value).toBe(2);
+  });
+
+  it("snaps to the closer neighbour when the date falls between two points", () => {
+    expect(nearestPoint(points, new Date(2019, 2, 1))?.value).toBe(2); // March 2019 → 2019
+    expect(nearestPoint(points, new Date(2019, 10, 1))?.value).toBe(3); // Nov 2019 → 2020
+  });
+
+  it("clamps to the first / last point when the date is out of range", () => {
+    expect(nearestPoint(points, year(2000))?.value).toBe(1);
+    expect(nearestPoint(points, year(2050))?.value).toBe(3);
   });
 });

@@ -4,3 +4,9 @@ h1 { font-size: 20px; margin: 0 0 4px; }
 .card { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; max-width: 760px; }
 .axis text { font-size: 11px; fill: #6b7280; }
 .line { fill: none; stroke: #2563eb; stroke-width: 2; }
+.overlay { fill: transparent; cursor: crosshair; }
+.focus-dot { fill: #2563eb; stroke: white; stroke-width: 2; pointer-events: none; }
+.focus-line { stroke: #9ca3af; stroke-dasharray: 3 3; pointer-events: none; }
+.tooltip { pointer-events: none; }
+.tooltip rect { fill: #1f2937; rx: 4; }
+.tooltip text { fill: white; font-size: 12px; }

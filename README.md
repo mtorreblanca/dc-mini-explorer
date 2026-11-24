@@ -90,7 +90,8 @@ for a few places, without exposing an API key in the browser bundle.
    `loadEnv`. The browser calls `/dc/v2/observation`; the key never leaves the server.
 3. Create `src/api/dataCommons.ts` with a typed `fetchSeries(variable, places)`:
    `GET /dc/v2/observation?date=&variable.dcids=…&entity.dcids=…&select=entity&select=variable&select=date&select=value`
-   (an empty `date` returns the full series).
+   (see the [observation docs](https://docs.datacommons.org/api/rest/v2/observation)
+   for the `date` value that returns the full time series vs. only the latest point).
 4. Add response types and a pure `toSeries(response)` in `src/lib/` that turns
    `byVariable → byEntity → orderedFacets[0].observations` into `Series[]`.
    Keep the facet's provenance so the chart can cite its source.

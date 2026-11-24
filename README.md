@@ -63,9 +63,96 @@ src/
 
 - [x] Timeline chart: scales, line path, axes
 - [x] Tooltip: bisector, focus dot, accessible label, keyboard navigation
-- [ ] Multiple series + legend
-- [ ] Brush + linked chart
-- [ ] Real data from the Data Commons REST API
-- [ ] Shareable URL state
-- [ ] Choropleth map with `d3-geo`
-- [ ] Component tests, responsive sizing, a11y review
+- [ ] **Step 3:** Real data from the Data Commons REST API (key kept out of the client)
+- [ ] **Step 4:** Handle real-world data: gaps, negative values, very different magnitudes
+- [ ] **Step 5:** Multiple series + legend
+- [ ] **Step 6:** Component tests (React Testing Library) + CI
+- [ ] **Step 7:** Shareable URL state
+- [ ] **Step 8:** Brush + linked chart
+- [ ] Later: choropleth map with `d3-geo`, responsive sizing, a11y review
+
+## Next steps (work plan)
+
+Each step is one small branch and one pull request. Work in VS Code, run
+`npm run dev` and `npm test` side by side, and commit when the "Done when"
+checks pass.
+
+### Step 3: Real data from the Data Commons API
+
+**Goal:** replace `sample.json` with real observations, e.g. `Count_Person`
+for a few places, without exposing an API key in the browser bundle.
+
+1. Get a free API key at <https://apikeys.datacommons.org> and put it in `.env`
+   as `DC_API_KEY=...` (`.env` is already git-ignored). Do **not** use a
+   `VITE_` prefix: Vite would bundle it into the client.
+2. In `vite.config.ts`, add a dev `server.proxy` for `/dc` →
+   `https://api.datacommons.org`, injecting the `X-API-Key` header from
+   `loadEnv`. The browser calls `/dc/v2/observation`; the key never leaves the server.
+3. Create `src/api/dataCommons.ts` with a typed `fetchSeries(variable, places)`:
+   `GET /dc/v2/observation?date=&variable.dcids=…&entity.dcids=…&select=entity&select=variable&select=date&select=value`
+   (see the [observation docs](https://docs.datacommons.org/api/rest/v2/observation)
+   for the `date` value that returns the full time series vs. only the latest point).
+4. Add response types and a pure `toSeries(response)` in `src/lib/` that turns
+   `byVariable → byEntity → orderedFacets[0].observations` into `Series[]`.
+   Keep the facet's provenance so the chart can cite its source.
+5. Add a small `useSeries` hook with loading, error and empty states, and an
+   `AbortController` so a stale request can't overwrite a newer one.
+6. Show the data source under the chart (Data Commons cites provenance for every number).
+
+**Done when:** the chart shows real data; `toSeries` has unit tests using a saved
+JSON fixture (no network in tests); `git grep DC_API_KEY` only matches
+`vite.config.ts` and docs; the README explains how to set the key.
+
+> For a deployed demo, move the proxy into a serverless function
+> (same pattern as Promptdeck's `api/complete.js`) so production also keeps the key server-side.
+
+### Step 4: Handle real-world data
+
+**Goal:** the line chart stays correct for any variable, not just population.
+
+- **Gaps:** use `line.defined()` so missing years break the line instead of
+  drawing a false straight segment.
+- **Domain:** start Y at 0 only when all values are ≥ 0; otherwise use the data
+  extent (temperature, growth rates). Always `.nice()`.
+- **Magnitudes:** format ticks with `d3.format('~s')` (1.2M) or the variable's unit (%, °C).
+- **Dates:** parse `YYYY`, `YYYY-MM` and `YYYY-MM-DD` (Data Commons uses all three).
+- **Empty data:** render an explicit "No data" state.
+
+**Done when:** each case has a unit test (pure functions in `src/lib/`) and a
+fixture you can switch to in the UI.
+
+### Step 5: Multiple series + legend
+
+**Goal:** compare places on one chart.
+
+- One shared X and Y scale computed from **all** series; one `<path>` per series.
+- A categorical color scale (`d3.scaleOrdinal`) with an accessible palette; don't
+  rely on color alone (legend labels, and highlight the hovered line).
+- Tooltip lists every series' value at the hovered date.
+
+**Done when:** 2–5 places render, the legend toggles series on/off, and hovering
+highlights one line.
+
+### Step 6: Component tests + CI
+
+- React Testing Library tests for `LineChart`: renders one path per series, axis
+  labels exist, the tooltip appears on keyboard focus, the "No data" state.
+- Add `.github/workflows/ci.yml` running `npm ci`, `npm run typecheck`,
+  `npm test -- --run` and `npm run build` on every push and pull request.
+
+**Done when:** CI is green and the README shows the CI badge.
+
+### Step 7: Shareable URL state
+
+- Store variable, places and date range in `URLSearchParams`; the URL is the
+  source of truth, and reloading restores the exact chart.
+- Use `history.replaceState` while dragging, `pushState` on discrete choices.
+
+**Done when:** copying the URL into a new tab reproduces the same view (with a test for the parse/serialize functions).
+
+### Step 8: Brush + linked chart
+
+- A small overview chart with `d3.brushX`; the selected range filters the main
+  chart. Debounce brush events and store the range in the URL (Step 7).
+
+**Done when:** brushing updates the main chart smoothly and the range survives a reload.

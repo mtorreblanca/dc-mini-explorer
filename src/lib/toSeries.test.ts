@@ -1,4 +1,5 @@
 import fixture from './__fixtures__/observation-count-person.json';
+import realFixture from './__fixtures__/observation-count-person-ca.real.json';
 import type { DcObservationResponse } from '../api/types';
 import { toSeries } from './toSeries';
 
@@ -48,5 +49,42 @@ describe('toSeries', () => {
       },
     });
     expect(series[0].source).toBeUndefined();
+  });
+
+  it('names the source from provenanceId when importName is missing', () => {
+    const [series] = toSeries({
+      byVariable: {
+        Count_Person: {
+          byEntity: {
+            'geoId/06': {
+              orderedFacets: [{ facetId: 'f', observations: [{ date: '2020', value: 1 }] }],
+            },
+          },
+        },
+      },
+      facets: { f: { provenanceId: 'dc/base/USCensusPEP_Annual_Population' } },
+    });
+    expect(series.source?.importName).toBe('USCensusPEP_Annual_Population');
+  });
+});
+
+// A real response saved from the API (Count_Person for California, date=).
+describe('toSeries with a real API response', () => {
+  const [california, ...rest] = toSeries(realFixture as DcObservationResponse, {
+    'geoId/06': 'California',
+  });
+
+  it('returns one series from the preferred facet', () => {
+    expect(rest).toHaveLength(0);
+    expect(california.placeName).toBe('California');
+    expect(california.observations.length).toBeGreaterThan(100);
+  });
+
+  it('cites the Census source even though the facet has no importName', () => {
+    expect(california.source).toEqual({
+      importName: 'USCensusPEP_Annual_Population',
+      provenanceUrl: 'https://www.census.gov/programs-surveys/popest.html',
+      measurementMethod: 'CensusPEPSurvey',
+    });
   });
 });

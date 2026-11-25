@@ -23,6 +23,7 @@ export interface DcOrderedFacet {
 /** Where a facet's numbers come from. */
 export interface DcFacet {
   importName?: string;
+  provenanceId?: string; // e.g. "dc/base/USCensusPEP_Annual_Population"; real responses may send this instead of importName
   provenanceUrl?: string;
   measurementMethod?: string;
   observationPeriod?: string; // ISO 8601 duration, e.g. "P1Y"

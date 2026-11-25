@@ -35,9 +35,12 @@ export function toSeries(
 }
 
 function toSource(facet: DcFacet | undefined): SeriesSource | undefined {
-  if (!facet?.importName) return undefined;
+  // Live responses often have no importName, only a provenanceId such as
+  // "dc/base/USCensusPEP_Annual_Population"; its last segment is the import name.
+  const importName = facet?.importName ?? facet?.provenanceId?.split('/').pop();
+  if (!facet || !importName) return undefined;
   return {
-    importName: facet.importName,
+    importName,
     provenanceUrl: facet.provenanceUrl,
     measurementMethod: facet.measurementMethod,
   };

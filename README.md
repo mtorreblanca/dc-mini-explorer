@@ -23,9 +23,16 @@ React 18 · TypeScript (strict) · D3 v7 · Vite · Vitest + React Testing Libra
 
 ## Getting started
 
-Requires Node.js 18+.
+Requires Node.js 18+ and a free Data Commons API key.
+
+1. Get a key at <https://apikeys.datacommons.org>.
+2. Copy `.env.example` to `.env` and set `DC_API_KEY=your-key`.
+   `.env` is git-ignored. The name has no `VITE_` prefix on purpose: Vite only
+   puts `VITE_*` variables into the browser bundle, so the key stays on the dev
+   server, which adds it to requests sent to Data Commons.
 
 ```bash
+cp .env.example .env   # then edit .env
 npm install
 npm run dev      # http://localhost:5173
 npm test         # unit tests (watch mode)

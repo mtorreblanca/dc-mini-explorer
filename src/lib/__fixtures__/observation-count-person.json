@@ -1,0 +1,58 @@
+{
+  "_note": "Hand-written test fixture in the shape of a Data Commons v2 /observation response (date= with select=entity,variable,date,value). Values are made up. geoId/06 has two facets to test that the first (preferred) one wins; geoId/99 has no data.",
+  "byVariable": {
+    "Count_Person": {
+      "byEntity": {
+        "geoId/06": {
+          "orderedFacets": [
+            {
+              "facetId": "1111",
+              "observations": [
+                { "date": "2019", "value": 1020 },
+                { "date": "2018", "value": 1010 },
+                { "date": "2020", "value": 1030 }
+              ],
+              "obsCount": 3,
+              "earliestDate": "2018",
+              "latestDate": "2020"
+            },
+            {
+              "facetId": "2222",
+              "observations": [{ "date": "2020", "value": 9999 }],
+              "obsCount": 1,
+              "earliestDate": "2020",
+              "latestDate": "2020"
+            }
+          ]
+        },
+        "geoId/48": {
+          "orderedFacets": [
+            {
+              "facetId": "1111",
+              "observations": [
+                { "date": "2018", "value": 500 },
+                { "date": "2019", "value": 510 }
+              ],
+              "obsCount": 2,
+              "earliestDate": "2018",
+              "latestDate": "2019"
+            }
+          ]
+        },
+        "geoId/99": {}
+      }
+    }
+  },
+  "facets": {
+    "1111": {
+      "importName": "ExamplePopulationEstimates",
+      "provenanceUrl": "https://example.org/population-estimates",
+      "measurementMethod": "ExampleEstimate",
+      "observationPeriod": "P1Y"
+    },
+    "2222": {
+      "importName": "OtherSource",
+      "provenanceUrl": "https://example.org/other"
+    }
+  }
+}

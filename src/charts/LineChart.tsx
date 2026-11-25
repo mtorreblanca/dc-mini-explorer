@@ -10,12 +10,14 @@ interface LineChartProps {
   title: string;
 }
 
-// Space around the plot area, reserved for the axes.
-const MARGIN = { top: 16, right: 24, bottom: 32, left: 48 };
+// Space around the plot area, reserved for the axes. The left margin fits
+// full tick labels for real populations (e.g. "40,000,000").
+const MARGIN = { top: 16, right: 24, bottom: 32, left: 72 };
 // Y-axis maximum used when there is no data.
 const DEFAULT_Y_MAX = 200;
 // Tooltip box size and its gap from the focus dot, in pixels.
-const TOOLTIP = { width: 84, height: 24, offset: 10 };
+// Wide enough for "2020 · 39,538,223".
+const TOOLTIP = { width: 136, height: 24, offset: 10 };
 
 const formatYear = d3.timeFormat('%Y');
 const formatValue = d3.format(',');

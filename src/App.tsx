@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useSeries } from "./hooks/useSeries";
 import { toPoints } from "./lib/transform";
 import { LineChart } from "./charts/LineChart";
+import { SourceNote } from "./charts/SourceNote";
 
 // What to show. Module-level constants keep references stable for useSeries.
 const VARIABLE = "Count_Person";
@@ -34,7 +35,10 @@ export default function App() {
           </p>
         )}
         {series && (
-          <LineChart data={points} title={`${series.statVar} over time for ${series.placeName}`} />
+          <>
+            <LineChart data={points} title={`${series.statVar} over time for ${series.placeName}`} />
+            <SourceNote source={series.source} />
+          </>
         )}
       </div>
     </main>

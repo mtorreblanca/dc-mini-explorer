@@ -4,8 +4,9 @@ A small, [Data Commons](https://datacommons.org)–style data explorer built wit
 **React + TypeScript + D3.js**: an interactive time-series chart with an
 accessible tooltip, built on a clean split between D3 math and React rendering.
 
-> The data in `src/data/sample.json` is **synthetic**, shaped like Data Commons
-> observations. It is not real statistics.
+The chart shows real observations from the
+[Data Commons REST API](https://docs.datacommons.org/api/rest/v2/observation)
+(`Count_Person` for California by default), with the source cited under it.
 
 ## Features
 
@@ -15,6 +16,9 @@ accessible tooltip, built on a clean split between D3 math and React rendering.
 - **Accessible:** the chart is labelled (`role="img"` + `<title>`), keyboard
   users can step through points with ← / →, and screen readers hear each value
   through an `aria-live` region.
+- **Real data, key kept server-side:** the browser calls a same-origin `/dc`
+  path; the Vite dev server adds the API key and forwards the request to Data Commons.
+- **Loading, error and empty states**, and stale requests are aborted.
 - **Tested:** data transforms are pure functions covered by unit tests.
 
 ## Tech stack
@@ -39,6 +43,9 @@ npm test         # unit tests (watch mode)
 npm run build    # type-check + production build in dist/
 ```
 
+The `/dc` proxy only runs in `npm run dev`. A production build has no server
+to add the key yet (see the deployment note in Step 3).
+
 ## How it's built
 
 | Who | Does what |
@@ -47,7 +54,7 @@ npm run build    # type-check + production build in dist/
 | **React** | Renders the SVG elements and owns the state (the hovered point) |
 | **useRef + useEffect** | The only place D3 touches the DOM directly (the axes) |
 
-Data flows one way: **raw API-shaped data → `transform.ts` (pure, tested) → chart component**.
+Data flows one way: **`fetchSeries` (API) → `toSeries` + `toPoints` (pure, tested) → `useSeries` state → chart component**.
 
 A few deliberate decisions:
 
@@ -60,9 +67,12 @@ A few deliberate decisions:
 
 ```
 src/
-  data/       types.ts, sample.json
-  lib/        transform.ts (toPoints, nearestPoint) + tests
-  charts/     LineChart.tsx
+  api/        dataCommons.ts (fetchSeries), types.ts (API response types) + tests
+  hooks/      useSeries.ts (loading / error / empty, AbortController) + tests
+  data/       types.ts (Series, Point)
+  lib/        transform.ts (toPoints, nearestPoint), toSeries.ts + tests
+              __fixtures__/ saved API responses for tests
+  charts/     LineChart.tsx, SourceNote.tsx
   App.tsx
 ```
 
@@ -70,7 +80,7 @@ src/
 
 - [x] Timeline chart: scales, line path, axes
 - [x] Tooltip: bisector, focus dot, accessible label, keyboard navigation
-- [ ] **Step 3:** Real data from the Data Commons REST API (key kept out of the client)
+- [x] **Step 3:** Real data from the Data Commons REST API (key kept out of the client)
 - [ ] **Step 4:** Handle real-world data: gaps, negative values, very different magnitudes
 - [ ] **Step 5:** Multiple series + legend
 - [ ] **Step 6:** Component tests (React Testing Library) + CI
@@ -93,8 +103,8 @@ for a few places, without exposing an API key in the browser bundle.
    as `DC_API_KEY=...` (`.env` is already git-ignored). Do **not** use a
    `VITE_` prefix: Vite would bundle it into the client.
 2. In `vite.config.ts`, add a dev `server.proxy` for `/dc` →
-   `https://api.datacommons.org`, injecting the `X-API-Key` header from
-   `loadEnv`. The browser calls `/dc/v2/observation`; the key never leaves the server.
+   `https://api.datacommons.org`, adding the key from `loadEnv` as the `key`
+   query parameter (the docs' auth method for GET; `X-API-Key` is shown for POST). The browser calls `/dc/v2/observation`; the key never leaves the server.
 3. Create `src/api/dataCommons.ts` with a typed `fetchSeries(variable, places)`:
    `GET /dc/v2/observation?date=&variable.dcids=…&entity.dcids=…&select=entity&select=variable&select=date&select=value`
    (see the [observation docs](https://docs.datacommons.org/api/rest/v2/observation)
